@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USER = "your-dockerhub-username"
+        DOCKER_HUB_USER = "Harshana96"
         IMAGE_NAME      = "${DOCKER_HUB_USER}/springboot-app"
         IMAGE_TAG       = "${GIT_BRANCH.split('/').last()}-${GIT_COMMIT.take(7)}"
         GITOPS_REPO     = "https://github.com/Harshana96/springboot-gitops.git"
