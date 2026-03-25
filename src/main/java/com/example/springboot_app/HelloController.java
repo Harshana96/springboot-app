@@ -12,7 +12,7 @@ public class HelloController {
 
     @GetMapping("/")
     public String hello() {
-        return "Hello from Spring Boot! Environment: " + activeProfile;
+        return "Hello from Spring Boot! new Environment: " + activeProfile;
     }
 
     @GetMapping("/health-check")
