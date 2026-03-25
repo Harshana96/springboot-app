@@ -65,29 +65,30 @@ pipeline {
                     passwordVariable: 'GIT_PASS'
                 )]) {
                     script {
-                            def branch = GIT_BRANCH.replaceAll("origin/", "")  // strips "origin/" prefix
-                            
-                            def overlay = ""
-                            if (branch == "dev")  overlay = "dev"
-                            if (branch == "qa")   overlay = "qa"
-                            if (branch == "main") overlay = "prod"
+                        def branch = GIT_BRANCH.replaceAll("origin/", "")
 
-                            echo "Branch: ${branch}, Overlay: ${overlay}"  // add this for debugging
+                        def overlay = ""
+                        if (branch == "dev")  overlay = "dev"
+                        if (branch == "qa")   overlay = "qa"
+                        if (branch == "main") overlay = "prod"
 
-                            if (overlay != "") {
-                                sh """
-                                    git clone https://${GIT_USER}:${GIT_PASS}@github.com/Harshana96/springboot-gitops.git
-                                    cd springboot-gitops
-                                    sed -i 's|newTag:.*|newTag: ${IMAGE_TAG}|' overlays/${overlay}/kustomization.yaml
-                                    git config user.email "jenkins@ci.local"
-                                    git config user.name "Jenkins CI"
-                                    git add overlays/${overlay}/kustomization.yaml
-                                    git commit -m "ci: update ${overlay} image tag to ${IMAGE_TAG}"
-                                    git push origin main
-                                """
-                            } else {
-                                echo "No overlay matched for branch: ${branch} — skipping GitOps update"
-                         }
+                        if (overlay != "") {
+                            sh """
+                                git clone https://github.com/Harshana96/springboot-gitops.git
+                                cd springboot-gitops
+
+                                # Set credentials separately — avoids @ issue
+                                git config user.email "jenkins@ci.local"
+                                git config user.name "Jenkins CI"
+                                git remote set-url origin https://${GIT_USER}:\${GIT_PASS}@github.com/Harshana96/springboot-gitops.git
+
+                                sed -i 's|newTag:.*|newTag: ${IMAGE_TAG}|' overlays/${overlay}/kustomization.yaml
+
+                                git add overlays/${overlay}/kustomization.yaml
+                                git commit -m "ci: update ${overlay} image tag to ${IMAGE_TAG}"
+                                git push origin main
+                            """
+                        }
                     }
                 }
             }
