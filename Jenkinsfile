@@ -65,21 +65,31 @@ pipeline {
                     passwordVariable: 'GIT_PASS'
                 )]) {
                     script {
+                        def branch = GIT_BRANCH.replaceAll("origin/", "")
+
                         def overlay = ""
-                        if (GIT_BRANCH == "origin/dev")  overlay = "dev"
-                        if (GIT_BRANCH == "origin/qa")   overlay = "qa"
-                        if (GIT_BRANCH == "origin/main") overlay = "prod"
+                        if (branch == "dev")  overlay = "dev"
+                        if (branch == "qa")   overlay = "qa"
+                        if (branch == "main") overlay = "prod"
 
                         if (overlay != "") {
                             sh """
-                                git clone https://${GIT_USER}:${GIT_PASS}@github.com/Harshana96/springboot-gitops.git
+                                rm -rf springboot-gitops
+
+                                git clone https://github.com/Harshana96/springboot-gitops.git
                                 cd springboot-gitops
-                                sed -i 's|newTag:.*|newTag: ${IMAGE_TAG}|' overlays/${overlay}/kustomization.yaml
+
                                 git config user.email "jenkins@ci.local"
                                 git config user.name "Jenkins CI"
+
+                                ENCODED_PASS=\$(python3 -c "import urllib.parse; print(urllib.parse.quote('${GIT_PASS}', safe=''))")
+                                git remote set-url origin https://${GIT_USER}:\${ENCODED_PASS}@github.com/Harshana96/springboot-gitops.git
+
+                                sed -i 's|newTag:.*|newTag: ${IMAGE_TAG}|' overlays/${overlay}/kustomization.yaml
+
                                 git add overlays/${overlay}/kustomization.yaml
                                 git commit -m "ci: update ${overlay} image tag to ${IMAGE_TAG}"
-                                git push
+                                git push origin main
                             """
                         }
                     }
