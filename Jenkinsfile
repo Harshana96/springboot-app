@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        cleanWs()   // ← cleans workspace before every build
+    }
+
     environment {
         DOCKER_HUB_USER = "harshanamj"
         IMAGE_NAME      = "${DOCKER_HUB_USER}/springboot-app"
