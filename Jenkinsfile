@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    options {
-        cleanWs()   // ← cleans workspace before every build
-    }
-
     environment {
         DOCKER_HUB_USER = "harshanamj"
         IMAGE_NAME      = "${DOCKER_HUB_USER}/springboot-app"
@@ -78,13 +74,16 @@ pipeline {
 
                         if (overlay != "") {
                             sh """
+                                rm -rf springboot-gitops
+
                                 git clone https://github.com/Harshana96/springboot-gitops.git
                                 cd springboot-gitops
 
-                                # Set credentials separately — avoids @ issue
                                 git config user.email "jenkins@ci.local"
                                 git config user.name "Jenkins CI"
-                                git remote set-url origin https://${GIT_USER}:\${GIT_PASS}@github.com/Harshana96/springboot-gitops.git
+
+                                ENCODED_PASS=\$(python3 -c "import urllib.parse; print(urllib.parse.quote('${GIT_PASS}', safe=''))")
+                                git remote set-url origin https://${GIT_USER}:\${ENCODED_PASS}@github.com/Harshana96/springboot-gitops.git
 
                                 sed -i 's|newTag:.*|newTag: ${IMAGE_TAG}|' overlays/${overlay}/kustomization.yaml
 
